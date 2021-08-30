@@ -8,7 +8,6 @@ var roleBuilder = {
             rolePick.newTask(creep);
             return;
         }
-        console.log('working');
         const to_repair = creep.room.find(FIND_STRUCTURES, {
              filter: object => (object.hits < object.hitsMax * 0.8)
         });
