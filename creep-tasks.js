@@ -257,7 +257,7 @@ class Task {
             this.creep.task = this.parent;
         }
         else {
-            console.log(`No creep executing ${this.name}!`);
+            //console.log(`No creep executing ${this.name}!`);
         }
     }
 }
@@ -984,7 +984,7 @@ function initializeTask(protoTask) {
             task = new TaskUpgrade(target);
             break;
         default:
-            console.log(`Invalid task name: ${taskName}! task.creep: ${protoTask._creep.name}. Deleting from memory!`);
+            //console.log(`Invalid task name: ${taskName}! task.creep: ${protoTask._creep.name}. Deleting from memory!`);
             task = new TaskInvalid(target);
             break;
     }
