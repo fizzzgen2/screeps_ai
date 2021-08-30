@@ -32,6 +32,8 @@ let roleMiner = {
             }
                 creep.task = Tasks.harvest(sources[target]);
         } else {
+            
+            Memory.gold_income += creep.carry.energy;
             creep.drop(RESOURCE_ENERGY);
             creep.memory.working = 1;
         }
