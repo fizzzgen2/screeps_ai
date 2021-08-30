@@ -12,9 +12,7 @@ let roleUpgrader = {
             var creeps = _.values(Game.creeps);
             creep.say('😈');
             var static_upgrader_creeps = _.filter(creeps, creep => creep.name.includes("STATIC_UPGRADER"));
-            console.log('STATIC' + static_upgrader_creeps);
             if (static_upgrader_creeps.length){
-                console.log('TRANSFER');
                 creep.task = Tasks.transfer(static_upgrader_creeps[0]);
                 return;
             }
