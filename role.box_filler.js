@@ -1,79 +1,88 @@
-(function(exports) {
-  'use strict';
+let Tasks = require('creep-tasks');
+let rolePick = require('role.pick');
+let towers = require('tower');
 
-  const slope = (p, a) => (a.y - p.y) / (a.x - p.x);
+let roleBoxFiller = {
 
-  const dist = (a, b) => Math.sqrt((b.y - a.y) * (b.y - a.y) + (b.x - a.x) * (b.x - a.x));
+    // Harvesters harvest from sources, preferring unattended ones and deposit to Spawn1
+    // This module demonstrates the RoomObject.targetedBy functionality
 
-  const sort = (p, memo, a, b) => {
-    const sa = slope(p, a);
-    const sb = slope(p, b);
-    [[sa, a], [sb, b]].forEach(e => {
-      const el = memo.get(e[0]);
-      if (!el || dist(p, el) < dist(p, e[1])) {
-        memo.set(e[0], e[1]);
-      }
-    });
-    return sa - sb;
-  };
+    newTask: function (creep, room) {
+        if (creep.carry.energy < creep.carryCapacity) {
+            var creeps = _.values(Game.creeps);
+            
+            var sources = room.find(FIND_SOURCES);
+            var dropenergys = creep.room.find(FIND_DROPPED_RESOURCES, {
+                 filter: (d) => {return (d.resourceType == RESOURCE_ENERGY)}
+            });
 
-  const ccw = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-
-  /**
-   * Graham's algorithm for calculating the convex hull.
-   *
-   * @public
-   * @module graphics/graham
-   * @param {Array} all
-   * @returns {Array}
-   *
-   * @example
-   * const points = [
-   *   { x: 0, y: 0 },
-   *   { x: 1, y: 0 },
-   *   { x: 0, y: 1 },
-   *   { x: 0.15, y: 0.15 },
-   *   { x: 0.5, y: 0.5 }
-   * ];
-   * const list = convexHull(points);
-   * // [{ x: 0, y: 0 },
-   * //  { x: 1, y: 0 },
-   * //  { x: 0.5, y: 0.5 },
-   * //  { x: 0, y: 1 }]
-   */
-  const convexHull = all => {
-    if (!all.length) {
-      return [];
+            while(sources.length > 3){sources.pop();}
+            
+            var target = Math.floor(Math.random()*sources.length);
+            if (creep.memory.target_added == 1){
+                target = creep.memory.target;
+            }else{
+                var creeps = _.values(Game.creeps);
+                var miner_creeps = _.filter(creeps, creep => creep.name.includes("DELIVER"));
+                for(var i=0;i<sources.length; ++i){
+                    var already_mining = false;
+                    for(var miner of miner_creeps){
+                        if (miner.memory.target_added && miner.memory.target == i){already_mining = true;}
+                    }
+                    if (!already_mining){
+                        target = i;
+                        break;
+                    }
+                }
+                creep.memory.target = target;
+                creep.memory.target_added = 1;
+            }
+            var index = target;
+            console.log(sources + '   ' + dropenergys);
+            target = sources[target];
+            var target_dropenergy = 0;
+            for(var d of dropenergys){
+                if(d.room.name == target.room.name && Math.abs(d.pos.x-target.pos.x) + Math.abs(d.pos.y-target.pos.y) < 4){
+                    target_dropenergy = d;
+                }else{
+                    console.log(target.pos.x + ' ' + target.pos.y + '|' + d.pos.x + ' ' + d.pos.y + ' == '+ (Math.abs(d.pos.x-target.pos.x) + Math.abs(d.pos.y-target.pos.y)));
+                }
+            }
+            if (target_dropenergy) {
+                if (index == 2){
+                console.log('!!!!!!!!!!!!!!!!!' + target.room.name);}
+                if(target_dropenergy.room.name != creep.room.name){
+                        creep.moveTo(target_dropenergy);}
+                else if (creep.pickup(target_dropenergy) == ERR_NOT_IN_RANGE) {
+                    
+                    if(target_dropenergy.room.name != creep.room.name){
+                        creep.moveTo(34, 0);
+                        
+                    }else{
+                    creep.moveTo(target_dropenergy);}
+                }
+            }
+        } else {
+            var structures = room.find(FIND_STRUCTURES, {
+                filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] < 2000 - creep.carry.energy)
+            });
+            var storages = room.find(FIND_STRUCTURES, {
+                filter: (s) => (s.structureType == STRUCTURE_STORAGE)
+            });
+            if (storages.length){
+                structures = storages;
+            }
+            var defense = towers.need_fill(creep.room);
+            creep.say('🚚');
+            if (defense.length){
+                structures = defense;
+            }
+            if (structures.length){
+                creep.task = Tasks.transfer(structures[0]);
+            }
+        }
     }
 
-    const p = all.reduce((a, c) => {
-      if (a.y < c.y) {
-        return a;
-      }
-      if (a.y > c.y) {
-        return c;
-      }
-      if (a.x < c.x) {
-        return a;
-      }
-      return c;
-    });
+};
 
-    const memo = new Map();
-    const stack = [];
-
-    all
-      .sort(sort.bind(null, p, memo))
-      .filter(c => memo.get(slope(p, c)) === c)
-      .forEach(p => {
-        while (stack.length > 1 && ccw(stack[stack.length - 2], stack[stack.length - 1], p) < 0) {
-          stack.pop();
-        }
-        stack.push(p);
-      });
-
-    return stack;
-  };
-
-  exports.convexHull = convexHull;
-})(typeof exports === 'undefined' ? window : exports);
+module.exports = roleBoxFiller;
