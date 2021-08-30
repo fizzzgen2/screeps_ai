@@ -12,9 +12,7 @@ var towers = {
                 return;
             }
             var closestHeal = tower.pos.findClosestByRange( FIND_MY_CREEPS, { filter: (creep) => {return ( creep.hits < creep.hitsMax ); } } );
-            console.log(closestHeal);
-            if(closestHeal) {
-                console.log('HEALING '+closestHeal);
+            if(closestHeal){
                 tower.heal(closestHeal);
                 return;
             }
@@ -25,10 +23,10 @@ var towers = {
             to_repair.sort((a,b) => a.hits/a.hitsMax - b.hits/b.hitsMax);
 
             if (to_repair.length == 0){
-                //to_repair = tower.room.find(FIND_STRUCTURES, {
-                    filter: (structure) => ((structure.hits < structure.hitsMax * 0.9 && (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART)))
-                //});
-                //to_repair.sort((a,b) => a.hits/a.hitsMax - b.hits/b.hitsMax);
+                to_repair = tower.room.find(FIND_STRUCTURES, {
+                    filter: (structure) => ((structure.hits < 10000 && (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART)))
+                });
+                to_repair.sort((a,b) => a.hits/a.hitsMax - b.hits/b.hitsMax);
             }
             if(to_repair.length) {
                 tower.repair(to_repair[0]);
