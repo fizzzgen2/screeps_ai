@@ -38,19 +38,14 @@ let roleBoxFiller = {
                 creep.memory.target_added = 1;
             }
             var index = target;
-            console.log(sources + '   ' + dropenergys);
             target = sources[target];
             var target_dropenergy = 0;
             for(var d of dropenergys){
                 if(d.room.name == target.room.name && Math.abs(d.pos.x-target.pos.x) + Math.abs(d.pos.y-target.pos.y) < 4){
                     target_dropenergy = d;
-                }else{
-                    console.log(target.pos.x + ' ' + target.pos.y + '|' + d.pos.x + ' ' + d.pos.y + ' == '+ (Math.abs(d.pos.x-target.pos.x) + Math.abs(d.pos.y-target.pos.y)));
                 }
             }
             if (target_dropenergy) {
-                if (index == 2){
-                console.log('!!!!!!!!!!!!!!!!!' + target.room.name);}
                 if(target_dropenergy.room.name != creep.room.name){
                         creep.moveTo(target_dropenergy);}
                 else if (creep.pickup(target_dropenergy) == ERR_NOT_IN_RANGE) {
