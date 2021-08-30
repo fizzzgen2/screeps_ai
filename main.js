@@ -43,14 +43,8 @@ module.exports.loop = function () {
     var static_upgrader_creeps = _.filter(creeps, creep => creep.name.includes("STATIC_UPGRADER"));
     var war_creeps = _.filter(creeps, creep => creep.name.includes("WAR"));
     var deliver_creeps = _.filter(creeps, creep => creep.name.includes("DELIVER"));
-    var observer_creeps = _.filter(creeps, creep => creep.name.includes("OBSERVER"));
     var need_harvest = 0;
 
-    if (observer_creeps.length > 0){
-        for (var c of observer_creeps){
-            sources = sources.concat(c.room.find(FIND_SOURCES));
-        }
-    }
     while(sources.length > 3){sources.pop();}
     // UNITS LIMITATIONS
     var UTILITY_UNITS = 4;
@@ -80,7 +74,6 @@ module.exports.loop = function () {
     var WAR_EXTENSIONS = unitsConfig.WAR_EXTENSIONS;
     var MINER_EXTENSIONS = unitsConfig.MINER_EXTENSIONS;
     var DELIVER_EXTENSIONS = unitsConfig.DELIVER_EXTENSIONS;
-    var OBSERVER_EXTENSIONS = [MOVE];
     var STATIC_UPGRADER_EXTENSIONS = unitsConfig.STATIC_UPGRADER_EXTENSIONS;
     
 
@@ -100,9 +93,6 @@ module.exports.loop = function () {
         console.log('SPAWN HARVEST');
         spawn.spawnCreep([WORK, CARRY, MOVE], "UTILITY::" + uuid());
     }else
-    if (observer_creeps.length < 1){
-        spawn.spawnCreep(OBSERVER_EXTENSIONS, "OBSERVER::" + uuid());
-    }else
     if (miner_creeps.length < MINER_UNITS) {
         console.log('SPAWN MINER');
         spawn.spawnCreep(MINER_EXTENSIONS, "MINER::" + uuid());
@@ -117,12 +107,6 @@ module.exports.loop = function () {
         
         console.log('STATIC UPGRADER');
         spawn.spawnCreep([MOVE, MOVE, WORK, WORK, WORK, WORK, WORK,WORK, WORK, WORK, WORK, CARRY], "STATIC_UPGRADER::" + uuid());
-    }
-    
-    if (observer_creeps.length >= 1){
-        observer_creeps[0].moveTo(36, 0);
-        console.log(observer_creeps[0].room.name);
-        
     }
 
     // Handle all roles, assigning each creep a new task if they are currently idle
