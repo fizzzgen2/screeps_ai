@@ -1,6 +1,5 @@
 // Example Screeps bot built using creep-tasks
 
-var graham = require('graham');
 var roleHarvester = require('role.harvester');
 var roleBuilder = require('role.builder');
 var roleUpgrader = require('role.upgrader');
@@ -13,12 +12,6 @@ var towers = require('tower');
 var structuresUpdater = require('structures_updater');
 var Tasks = require('creep-tasks');
 
-function bodyCost (body) {
-    return body.reduce(function (cost, part) {
-        return cost + BODYPART_COST[part];
-    }, 0);
-}
-
 function uuid() {
   return 'xxxx:xxxx:xxxx'.replace(/[xy]/g, function(c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -26,17 +19,33 @@ function uuid() {
   });
 }
 
+function bodyCost (body) {
+    return body.reduce(function (cost, part) {
+        return cost + BODYPART_COST[part];
+    }, 0);
+}
+
 module.exports.loop = function () {
+    Memory.gold_income = 0.0;
+    if(! Memory.gold){
+        Memory.gold = 1;
+    }
+
+    var totalBodyCost = 1;
     var spawn = Game.spawns['Spawn1'];
     var room = spawn.room;
-    towers.need_fill(room);
+
+
     var boxes = room.find(FIND_STRUCTURES, {
                           filter: (s) => (s.structureType == STRUCTURE_CONTAINER)
             });
     var extensions = room.find(FIND_MY_STRUCTURES, { filter: (s) => s.structureType == STRUCTURE_EXTENSION });
-    
-    structuresUpdater.update(room, spawn);
     var creeps = _.values(Game.creeps);
+    for (var c of creeps){
+        for (var b in c.body){
+            totalBodyCost = totalBodyCost + 75;
+        }
+    }
     var sources = room.find(FIND_SOURCES);
     var utility_creeps = _.filter(creeps, creep => creep.name.includes("UTILITY"));
     var miner_creeps = _.filter(creeps, creep => creep.name.includes("MINER"));
@@ -45,9 +54,7 @@ module.exports.loop = function () {
     var deliver_creeps = _.filter(creeps, creep => creep.name.includes("DELIVER"));
     var need_harvest = 0;
 
-    while(sources.length > 3){sources.pop();}
-    // UNITS LIMITATIONS
-    var UTILITY_UNITS = 4;
+    var UTILITY_UNITS = 3;
     if(UTILITY_UNITS < 3){UTILITY_UNITS = 3};
     var WAR_UNITS = 1;
     var MINER_UNITS = sources.length;
@@ -56,18 +63,6 @@ module.exports.loop = function () {
         MINER_UNITS = 0;
         DELIVER_UNITS = 0;
     }
-    
-    // STRUCTURES LIMITATIONS
-    var BOXES_UNITS = 1;
-    var EXTENSIONS_UNITS = CONTROLLER_STRUCTURES[STRUCTURE_EXTENSION][room.controller.level];
-    var TOWER_UNITS = CONTROLLER_STRUCTURES[STRUCTURE_TOWER][room.controller.level];
-    console.log('CPU AMOUNT: ' + Game.cpu.bucket);
-    console.log('UTILITY_UNITS: ' + utility_creeps.length + '/' + UTILITY_UNITS);
-    console.log('WAR_UNITS: ' + war_creeps.length + '/' + WAR_UNITS);
-    console.log('DELIVER_UNITS: ' + deliver_creeps.length + '/' + DELIVER_UNITS);
-    console.log('MINER_UNITS: ' + miner_creeps.length + '/' + MINER_UNITS);
-    console.log('EXTENSIONS_STRUCTURES: ' + extensions.length + '/' + EXTENSIONS_UNITS);
-    console.log('BOXES_STRUCTURES: ' + boxes.length + '/' + BOXES_UNITS);
 
     // SET UP EXTENSIONS
     var UTILITY_EXTENSIONS = unitsConfig.UTILITY_EXTENSIONS;
@@ -78,35 +73,35 @@ module.exports.loop = function () {
     
 
 //         FILL SPAWNS IF NOT FULL
-            var _extensions = room.find(FIND_MY_STRUCTURES, { filter: (s) => s.structureType == STRUCTURE_EXTENSION });
-            var _spawn = Game.spawns['Spawn1'];
-            _extensions.push(_spawn);
-            _extensions.reverse();
-            for (var s of _extensions){
-                if(s.energy < s.energyCapacity){
-                    need_harvest = 1;
-                }
-            }
+    var _extensions = room.find(FIND_MY_STRUCTURES, { filter: (s) => s.structureType == STRUCTURE_EXTENSION });
+    var _spawn = Game.spawns['Spawn1'];
+    _extensions.push(_spawn);
+    _extensions.reverse();
+    for (var s of _extensions){
+        if(s.energy < s.energyCapacity){
+            need_harvest = 1;
+        }
+    }
 //          #######################
 
+
+
+    structuresUpdater.update(room, spawn);
+
+
     if (utility_creeps.length < UTILITY_UNITS && miner_creeps.length ==  MINER_UNITS || utility_creeps.length < 4) {
-        console.log('SPAWN HARVEST');
         spawn.spawnCreep([WORK, CARRY, MOVE], "UTILITY::" + uuid());
     }else
     if (miner_creeps.length < MINER_UNITS) {
-        console.log('SPAWN MINER');
         spawn.spawnCreep(MINER_EXTENSIONS, "MINER::" + uuid());
     }else
     if (deliver_creeps.length < DELIVER_UNITS) {
-        console.log('SPAWN DELIVER');
         spawn.spawnCreep(DELIVER_EXTENSIONS, "DELIVER::" + uuid());
     }else
     if (war_creeps.length < WAR_UNITS) {
         spawn.spawnCreep(WAR_EXTENSIONS, "WAR::" + uuid());
     }else if(static_upgrader_creeps.length < 1){
-        
-        console.log('STATIC UPGRADER');
-        spawn.spawnCreep([MOVE, MOVE, WORK, WORK, WORK, WORK, WORK,WORK, WORK, WORK, WORK, CARRY], "STATIC_UPGRADER::" + uuid());
+        spawn.spawnCreep(MINER_EXTENSIONS, "STATIC_UPGRADER::" + uuid());
     }
 
     // Handle all roles, assigning each creep a new task if they are currently idle
@@ -159,11 +154,53 @@ module.exports.loop = function () {
     }
 
 
-    //################################################################
-    // Now that all creeps have their tasks, execute everything
     for (var creep of creeps) {
         creep.run();
     }
     towers.tick();
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    var tick_ms=0;
+    if (! Memory.latest_tick_time_ms){
+        Memory.latest_tick_time_ms = Date.now();
+    }else{
+        tick_ms =  -(Memory.latest_tick_time_ms - Date.now());
+        Memory.latest_tick_time_ms = Date.now();
+    }
+    Memory.gold = (Memory.gold * 100 +  Memory.gold_income)/101;
+    var statsConsole = require("statsConsole");
+    // sample data format ["Name for Stat", variableForStat]
+    let myStats = [
+    ['Tick MilliSeconds', tick_ms],
+    ["Creeps count", creeps.length],
+    ["Energy per tick", Memory.gold],
+	["Creeps per tick cost", totalBodyCost/1500]
+    ];
+
+statsConsole.run(myStats); // Run Stats collection
+
+	statsConsole.log("Tick: " + Game.time);
+
+if ((Game.time % 10) === 0) {
+	console.log(statsConsole.displayHistogram());
+	console.log(statsConsole.displayStats());
+	console.log(statsConsole.displayLogs());
+}
 
 };
