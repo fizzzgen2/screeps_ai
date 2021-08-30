@@ -1,5 +1,5 @@
 // Example Screeps bot built using creep-tasks
-sdfjknv
+
 var graham = require('graham');
 var roleHarvester = require('role.harvester');
 var roleBuilder = require('role.builder');
