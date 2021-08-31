@@ -8,11 +8,10 @@ let roleStaticUpgrader = {
     newTask: function(creep) {
         if (creep.carry.energy == 0) {
             creep.say('no energy');
-            creep.moveTo(43, 27);
+            creep.moveTo(creep.room.controller);
         } else {
             creep.say('😈');
-            if(creep.pos.x == 43 && creep.pos.y == 27){
-            creep.task = Tasks.upgrade(creep.room.controller);} else{creep.moveTo(creep.room.controller);}
+            creep.task = Tasks.upgrade(creep.room.controller);
         }
     }
 
